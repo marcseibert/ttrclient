@@ -296,6 +296,9 @@ namespace TTR {
                 if(OnReceivedActionResponse[(int) response.turnType] != null) {
                     OnReceivedActionResponse[(int) response.turnType](response);
                     OnReceivedActionResponse[(int) response.turnType] = null; // COULD BE AN ISSUE IF AWAITING MULTIPLE RESPONSES OF SAME TYPE
+                } else {
+                    EventHandler<Protocol.TurnResp> handler = OnReceivedResponse;
+                    handler(this, response);
                 }
                 
             } else if(message.Type == Protocol.MessageType.Request) {
@@ -308,7 +311,7 @@ namespace TTR {
                 
             }
             else if(message.Type == Protocol.MessageType.TextMessage) {
-                Debug.Log("[Server Message] " + ((TTR.Protocol.TextResp)message).text);
+                Debug.Log("[Server Message] " + ((Protocol.TextResp)message).text);
             }
         }
 

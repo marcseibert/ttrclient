@@ -70,7 +70,6 @@ namespace TTR {
 					result = this.inStream.ReadLine();
 
 					base.OnNewMessageReceived(result);
-					Debug.Log("Still active after receiving!");
 				}
 			}
 			catch(ObjectDisposedException e) {
