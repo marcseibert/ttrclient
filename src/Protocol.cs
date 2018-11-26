@@ -324,11 +324,15 @@ namespace TTR.Protocol {
   public class ClaimRouteResp : TurnResp {
     public Destination d1;
     public Destination d2;
+    public PassengerCarColor routeColor;
     public PassengerCarColor[] passengerCarColors;
-    public ClaimRouteResp (PlayerColor nextPlayer, Destination d1, Destination d2, PassengerCarColor[] passengerCarColor)
-      : base(true, nextPlayer, TurnType.ClaimRoute) {
+    public ClaimRouteResp (
+        PlayerColor player, Destination d1, Destination d2, PassengerCarColor routeColor,
+        PassengerCarColor[] passengerCarColor)
+      : base(true, player, TurnType.ClaimRoute) {
       this.d1 = d1;
       this.d2 = d2;
+      this.routeColor = routeColor;
       this.passengerCarColors = passengerCarColor;
     }
     
@@ -337,7 +341,9 @@ namespace TTR.Protocol {
       s.Append(base.ToString());
       s.Append(";d1:" + d1);
       s.Append(";d2:" + d2);
-      s.Append(";passengerCarColors:"+string.Join(",", passengerCarColors));
+      s.Append(";routeColor:" + routeColor);
+      s.Append(";passengerCarColors:" + string.Join(",", passengerCarColors));
+
       return s.ToString();
     }
   }

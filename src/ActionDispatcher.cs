@@ -65,9 +65,14 @@ namespace TTR {
             if(!IsHalted && this.pendingMessages != null) {
                 lock(this.pendingMessages){
                     if(this.pendingMessages.Count > 0) {
-                        var message = this.pendingMessages.Dequeue();
+                        var message = this.pendingMessages.Peek();
 
-                        DispatchMessage(message);
+                        if(DispatchMessage(message)) {
+                            this.pendingMessages.Dequeue();
+                        } else {
+                            this.Log("Halting Action Dispatcher because there is no event handler.");
+                            Pause();
+                        }
                     }
                 }
             } else {
@@ -184,7 +189,7 @@ namespace TTR {
             return true;
         }
 
-        public bool ClaimRoute(Protocol.Destination destA, Protocol.Destination destB, Protocol.PassengerCarColor color, Action<Protocol.TurnResp> callback=null) {
+        public bool ClaimRoute(Protocol.Destination destA, Protocol.Destination destB, Protocol.PassengerCarColor routeColor, Protocol.PassengerCarColor passengerCarColor, Action<Protocol.TurnResp> callback=null) {
             if(IsActionBlocked(Protocol.TurnType.ClaimRoute, true)){
                 return false;
             }
@@ -193,7 +198,11 @@ namespace TTR {
             builder.Append("ClaimRoute ")
                     .Append(destA.ToString())
                     .Append(" ")
-                    .Append(destB.ToString());
+                    .Append(destB.ToString())
+                    .Append(" ")
+                    .Append(routeColor)
+                    .Append(" ")
+                    .Append(passengerCarColor);
 
             this.OnReceivedActionResponse[(int) Protocol.TurnType.ClaimRoute] += callback;
 
@@ -289,30 +298,37 @@ namespace TTR {
         /*
             Decides upon the message type which event to trigger.
          */
-        private void DispatchMessage(Protocol.Message message) {
+        private bool DispatchMessage(Protocol.Message message) {
             if(message.Type == Protocol.MessageType.Info) {
                 Debug.Log("i: " + message);
                 Protocol.TurnResp response = (Protocol.TurnResp) message;
                 if(OnReceivedActionResponse[(int) response.turnType] != null) {
                     OnReceivedActionResponse[(int) response.turnType](response);
                     OnReceivedActionResponse[(int) response.turnType] = null; // COULD BE AN ISSUE IF AWAITING MULTIPLE RESPONSES OF SAME TYPE
-                } else {
+                } else if(OnReceivedResponse != null) {
                     EventHandler<Protocol.TurnResp> handler = OnReceivedResponse;
                     handler(this, response);
+                } else {
+                    return false;
                 }
                 
             } else if(message.Type == Protocol.MessageType.Request) {
                 Debug.Log("r: " + message);
                 Protocol.TurnReq request = (Protocol.TurnReq) message;
 
-                // TURN REQUEST
-                EventHandler<Protocol.TurnReq> handler = OnReceivedTurnRequest;
-                handler(this, request);
-                
+                if(OnReceivedTurnRequest != null) {
+                    // TURN REQUEST
+                    EventHandler<Protocol.TurnReq> handler = OnReceivedTurnRequest;
+                    handler(this, request);
+                } else {
+                    return false;
+                }
             }
             else if(message.Type == Protocol.MessageType.TextMessage) {
                 Debug.Log("[Server Message] " + ((Protocol.TextResp)message).text);
             }
+
+            return true;
         }
 
         void OnApplicationQuit() {

@@ -68,14 +68,14 @@ namespace TTR {
 					var player = ToEnum<PlayerColor>(message["player"]);
 					var destinationA = ToEnum<Destination>(message["d1"]);
 					var destinationB = ToEnum<Destination>(message["d2"]);
-
+					PassengerCarColor routeColor = ToEnum<PassengerCarColor>(message["routeColor"]);
 					PassengerCarColor[] colors = new PassengerCarColor[message["passengerCarColors"].Count];
 					int i = 0; 
 					foreach(var color in message["passengerCarColors"].AsArray) {
 						colors[i++] = ToEnum<PassengerCarColor>(color.Value); 
 					}
 
-					return new ClaimRouteResp(player, destinationA, destinationB, colors);
+					return new ClaimRouteResp(player, destinationA, destinationB, routeColor, colors);
 
 				} else if(turnType == TurnType.DrawPassengerCars) {
 					PassengerCarColor drawnCard = ToEnum<PassengerCarColor>(message["drawnCard"]);
