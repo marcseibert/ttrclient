@@ -30,8 +30,8 @@ private void OnReceivedTurnRequest(object sender, TTR.Protocol.TurnReq request) 
   if(request.turnType == TTR.Protocol.TurnType.Join) {
     dispatcher.JoinGame("Marc", TTR.Protocol.ClientType.Player, (response) => {
       if(response.success) {
-        this.state = CurrentState.WaitForPlayers;
-        this.statusText.text = "Waiting for other players.";
+        Debug.Log("Successfully joined the game.");
+        // ...
         }
      });
    }
