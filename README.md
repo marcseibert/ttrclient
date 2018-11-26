@@ -7,11 +7,10 @@ wird automatisch gehandhabt.
 1. Auf **Assets/Import Packages/Custom** Package klicken.
 2. Das File **ttrclient.unitypackage** auswählen.
 3. Ein GameObject erstellen und den **ActionDispatcher.cs** als Komponente hinzufügen.
+4. Die Methode void Init(TTR.ClientMode mode, string address, int port) muss aufgerufen werden, bevor der ActionDispatcher benutzt wird.
 
 # Module
-Der Client kann in zwei Varianten initialisiert werden. Die erste Variante ist der sogenannte **Offline Client**. Der Offline Client muss mit **ClientModus.Log** initialisiert werden. Als zweite Option gibt es den **Online Client**.
-
-Der ActionDispatcher kapselt den Client und vereinfacht das Arbeiten mit ihm.
+Der Client kann in zwei Varianten initialisiert werden. Die erste Variante ist der sogenannte **Offline Client**. Der Offline Client muss mit **ClientModus.Log** initialisiert werden. Als zweite Option gibt es den **Online Client**. Beide Clients verhalten sich gleich. Der **Offline Client** simuliert den **Online Cient** indem er nach jeder Zeile den Message Receiver Thread für eine gewisse Zeit blockiert.
 
 # Funktionen
 Für jeden Befehl des CLI Clients gibt es eine Methode im **ActionDispatcher.cs**. Neben diesen gibt es noch weitere Hilfsmethoden um das verarbeiten zu erleichtern.
