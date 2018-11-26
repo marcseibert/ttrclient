@@ -1,6 +1,6 @@
 # ttrclient
 Einfache Bibliothek, die zur Kommunikation mit dem TTR-Server genutzt werden kann. Client-Server Kommunikation und JSON Parsen 
-wird automatisch gehandelt.
+wird automatisch gehandhabt.
 
 # Installation
 
