@@ -16,13 +16,12 @@ Der ActionDispatcher kapselt den Client und vereinfacht das Arbeiten mit ihm.
 # Online Examples
 ```csharp
 TTR.ActionDispatcher dispatcher;
-
 void Start () {
-	// GET INSTANCE OF ACTION DISPATCHER
-	dispatcher = Transform.FindObjectOfType<TTR.ActionDispatcher>();	
+  // GET INSTANCE OF ACTION DISPATCHER
+  dispatcher = Transform.FindObjectOfType<TTR.ActionDispatcher>();	
 
-	// SUBSCRIBE TO EVENT
-	dispatcher.OnReceivedTurnRequest += new System.EventHandler<TTR.Protocol.TurnReq>(OnReceivedTurnRequest);
+  // SUBSCRIBE TO EVENT
+  dispatcher.OnReceivedTurnRequest += new System.EventHandler<TTR.Protocol.TurnReq>(OnReceivedTurnRequest);
 
   dispatcher.Init(ClientMode.Live, "127.0.0.1", 8080);
 }
