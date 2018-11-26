@@ -4,28 +4,28 @@ wird automatisch gehandhabt.
 
 # Installation
 
-1. Auf *Assets/Import Packages/Custom* Package klicken.
-2. Das File *ttrclient.unitypackage* auswählen.
-3. Ein GameObject erstellen und den *ActionDispatcher.cs* als Komponente hinzufügen.
+1. Auf **Assets/Import Packages/Custom** Package klicken.
+2. Das File **ttrclient.unitypackage** auswählen.
+3. Ein GameObject erstellen und den **ActionDispatcher.cs** als Komponente hinzufügen.
 
 # Module
-Der Client kann in zwei Varianten initialisiert werden. Die erste Variante ist der sogenannte *Offline Client*. Der Offline Client muss mit *ClientModus.Log* initialisiert werden. Als zweite Option gibt es den *Online Client*.
+Der Client kann in zwei Varianten initialisiert werden. Die erste Variante ist der sogenannte **Offline Client**. Der Offline Client muss mit **ClientModus.Log** initialisiert werden. Als zweite Option gibt es den **Online Client**.
 
 Der ActionDispatcher kapselt den Client und vereinfacht das Arbeiten mit ihm.
 
 # Funktionen
-Für jeden Befehl des CLI Clients gibt es eine Methode im *ActionDispatcher.cs*. Neben diesen gibt es noch weitere Hilfsmethoden um das verarbeiten zu erleichtern.
+Für jeden Befehl des CLI Clients gibt es eine Methode im **ActionDispatcher.cs**. Neben diesen gibt es noch weitere Hilfsmethoden um das verarbeiten zu erleichtern.
 
 ```csharp
 public void AwaitConnection(System.Action delayedAction)
 ```
-Sobald der Client mit dem Server verbunden ist, wird die Action *delayedAction* ausgeführt. Wenn die Verbindung bereits steht, dann wird die *delayedAction* direkt ausgelöst.
+Sobald der Client mit dem Server verbunden ist, wird die Action **delayedAction** ausgeführt. Wenn die Verbindung bereits steht, dann wird die **delayedAction** direkt ausgelöst.
 
 ```csharp
 public void Pause(float duration)
 ```
-Erlaubt es den Action Dispatcher für eine *duration* (in Sekunden) zu pausieren. Das heißt, dass alle ankommenden Messages gepuffert werden aber keines der Events (OnReceivedTurnRequest, OnReceivedResponse,OnReceivedActionResponse) ausgelöst wird.
-Das Argument *duration* ist optional. Wenn man die Methode ohne Parameter bzw. einer *duration* <= 0 aufruft, dann wird der ActionDispatcher dauerhaft angehlaten. Mithilfe der *Resume()* Methode, kann der ActionDispatcher wieder aktiviert werden.
+Erlaubt es den Action Dispatcher für eine **duration** (in Sekunden) zu pausieren. Das heißt, dass alle ankommenden Messages gepuffert werden aber keines der Events (OnReceivedTurnRequest, OnReceivedResponse,OnReceivedActionResponse) ausgelöst wird.
+Das Argument **duration** ist optional. Wenn man die Methode ohne Parameter bzw. einer **duration** <= 0 aufruft, dann wird der ActionDispatcher dauerhaft angehlaten. Mithilfe der **Resume()** Methode, kann der ActionDispatcher wieder aktiviert werden.
 
 # Online Example
 ```csharp
