@@ -40,21 +40,21 @@ private void OnReceivedTurnRequest(object sender, TTR.Protocol.TurnReq request) 
 # Offline Examples
 ## Befehle empfange und bearbeiten.
 ```csharp
-	Action Dispatcher;
+TTR.ActionDispatcher dispatcher;
   
 void Start() {
-	dispatcher = Transform.FindObjectOfType<TTR.ActionDispatcher>();
-	dispatcher.Init(TTR.ClientMode.Log, "/Users/marcseibert/Desktop/log.txt");
-	dispatcher.Pause();
+  dispatcher = Transform.FindObjectOfType<TTR.ActionDispatcher>();
+  dispatcher.Init(TTR.ClientMode.Log, "/Users/marcseibert/Desktop/log.txt");
+  dispatcher.Pause();
 }
 
 void Update() {
-	if(this.dispatcher.IsMessageAvailable()) {
-		var message = this.dispatcher.GetNextMessage();
+  if(this.dispatcher.IsMessageAvailable()) {
+    var message = this.dispatcher.GetNextMessage();
 
-		if(message.Type == TTR.Protocol.MessageType.Info) {
-		// DO WHATEVER
-	  }
-	}
+    if(message.Type == TTR.Protocol.MessageType.Info) {
+       // DO WHATEVER
+    }
+  }
 }
 ```
