@@ -13,9 +13,10 @@ Der Client kann in zwei Varianten initialisiert werden. Die erste Variante ist d
 
 Der ActionDispatcher kapselt den Client und vereinfacht das Arbeiten mit ihm.
 
-# Online Examples
+# Online Example
 ```csharp
 TTR.ActionDispatcher dispatcher;
+
 void Start () {
   // GET INSTANCE OF ACTION DISPATCHER
   dispatcher = Transform.FindObjectOfType<TTR.ActionDispatcher>();	
@@ -38,7 +39,7 @@ private void OnReceivedTurnRequest(object sender, TTR.Protocol.TurnReq request) 
 }
 ```
 
-# Offline Examples
+# Offline Example
 ## Befehle empfange und bearbeiten.
 ```csharp
 TTR.ActionDispatcher dispatcher;
