@@ -22,7 +22,7 @@ public void AwaitConnection(System.Action delayedAction)
 Sobald der Client mit dem Server verbunden ist, wird die Action *delayedAction* ausgeführt. Wenn die Verbindung bereits steht, dann wird die *delayedAction* direkt ausgelöst.
 
 ```csharp
-Pause(float duration)
+public void Pause(float duration)
 ```
 Erlaubt es den Action Dispatcher für eine *duration* (in Sekunden) zu pausieren. Das heißt, dass alle ankommenden Messages gepuffert werden aber keines der Events (OnReceivedTurnRequest, OnReceivedResponse,OnReceivedActionResponse) ausgelöst wird.
 Das Argument *duration* ist optional. Wenn man die Methode ohne Parameter bzw. einer *duration* <= 0 aufruft, dann wird der ActionDispatcher dauerhaft angehlaten. Mithilfe der *Resume()* Methode, kann der ActionDispatcher wieder aktiviert werden.
