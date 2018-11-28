@@ -1,3 +1,5 @@
+# WICHTIG!! Die .Net Version muss auf 4.0 gestellt werden
+# Wähle im Menü aus Edit/ Project Settings/ Player. Dort muss unter Configuration die Scripting Runtime Version auf ".NET 4.x equivalent gestellt" werden
 # ttrclient
 Einfache Bibliothek, die zur Kommunikation mit dem TTR-Server genutzt werden kann. Client-Server Kommunikation und JSON Parsen 
 wird automatisch gehandhabt.
