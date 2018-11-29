@@ -75,3 +75,100 @@ void Update() {
   }
 }
 ```
+
+# Demo Handler
+```csharp
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+using TMPro;
+
+namespace TTR {
+
+	public class OldDemoHandler : MonoBehaviour {
+
+		public StatusText statusText;
+		public WagoncardStack stack;
+		public GameObject character;
+
+		CurrentState state = CurrentState.Joining;
+		TTR.ActionDispatcher dispatcher;
+
+		
+		// Use this for initialization
+		void Start () {
+			// GET INSTANCE OF ACTION DISPATCHER
+			dispatcher = Transform.FindObjectOfType<TTR.ActionDispatcher>();	
+
+			// SUBSCRIBE TO EVENT
+			dispatcher.OnReceivedTurnRequest += new System.EventHandler<TTR.Protocol.TurnReq>(OnReceivedTurnRequest);
+			
+			dispatcher.Init(ClientMode.Live, "127.0.0.1", 8080);
+
+
+			statusText.Move(ScreenPosition.Center);
+		}
+
+		private void OnReceivedTurnRequest(object sender, TTR.Protocol.TurnReq request) {
+			if(request.turnType == TTR.Protocol.TurnType.Join) {
+				dispatcher.JoinGame("Marc", TTR.Protocol.ClientType.Player, (response) => {
+					if(response.success) {
+						this.state = CurrentState.WaitForPlayers;
+						this.statusText.text = "Waiting for other players.";
+						dispatcher.Pause(2f);
+					}		
+				});
+
+			} else if(request.turnType == TTR.Protocol.TurnType.ClaimDestinationTickets) {
+				dispatcher.ClaimDestinationTickets(true, true, false, (response) => {
+					Debug.Log("Claimed Tickets yeah...");
+
+					character.GetComponent<Animator>().Play("Yeah");
+					this.state = CurrentState.GetBoardState;
+					this.statusText.text = "Claimed Destination Ticktes";
+					this.statusText.Move(ScreenPosition.Top);
+					dispatcher.Pause(2f);
+				});
+
+			} else if(request.turnType == TTR.Protocol.TurnType.Turn) {
+				// CHOOSE BETWEEN THREE ACTIONS (CLAIM DESTINATION TICKETS / DRAW PASSENGER CARS / BUILD ROUTE)
+
+				if(this.state == CurrentState.GetBoardState) {
+					dispatcher.GetBoardState((response) => {
+						var boardState = (TTR.Protocol.BoardStateResp) response;
+						statusText.text = "Received Board State";
+						stack.StartCoroutine("InitCardDeck", boardState.faceUpPassengerCarDeck);
+					});
+					this.state = CurrentState.Waiting;
+				}
+			}
+		}
+
+		private void ExecuteLater(System.Action action) {
+			if(action != null) {
+				action();
+			}
+		}
+
+		/*
+		void Start() {
+			dispatcher = Transform.FindObjectOfType<TTR.ActionDispatcher>();
+			dispatcher.Init(TTR.ClientMode.Log, "/Users/marcseibert/Desktop/log.txt");
+			dispatcher.Pause();
+		}
+
+		void Update() {
+			if(this.dispatcher.IsMessageAvailable()) {
+				var message = this.dispatcher.GetNextMessage();
+
+				if(message.Type == TTR.Protocol.MessageType.Info) {
+					// DO WHATEVER
+
+				}
+			}
+		}*/
+
+
+	}
+}
+```
