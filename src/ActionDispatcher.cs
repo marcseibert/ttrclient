@@ -285,13 +285,13 @@ namespace TTR {
             Handles the OnMessageReceived Event from the client.
          */
         private void ProcessServerMessage(object sender, string message) {
-            Debug.Log("Received Server Message: " +message);
+            //Debug.Log("Received Server Message: " +message);
             var messageObject = JSONParser.Parse(message);
-            Debug.Log("parsed object " + (pendingMessages == null));
+            //Debug.Log("parsed object " + (pendingMessages == null));
 
             lock(this.pendingMessages) {
                 this.pendingMessages.Enqueue(messageObject);
-                Debug.Log("enqueued this request!");
+                //Debug.Log("enqueued this request!");
             }
         }
 
@@ -300,7 +300,7 @@ namespace TTR {
          */
         private bool DispatchMessage(Protocol.Message message) {
             if(message.Type == Protocol.MessageType.Info) {
-                Debug.Log("i: " + message);
+                //Debug.Log("i: " + message);
                 Protocol.TurnResp response = (Protocol.TurnResp) message;
                 if(OnReceivedActionResponse[(int) response.turnType] != null) {
                     OnReceivedActionResponse[(int) response.turnType](response);
@@ -313,7 +313,7 @@ namespace TTR {
                 }
                 
             } else if(message.Type == Protocol.MessageType.Request) {
-                Debug.Log("r: " + message);
+                //Debug.Log("r: " + message);
                 Protocol.TurnReq request = (Protocol.TurnReq) message;
 
                 if(OnReceivedTurnRequest != null) {
@@ -325,7 +325,7 @@ namespace TTR {
                 }
             }
             else if(message.Type == Protocol.MessageType.TextMessage) {
-                Debug.Log("[Server Message] " + ((Protocol.TextResp)message).text);
+                //Debug.Log("[Server Message] " + ((Protocol.TextResp)message).text);
             }
 
             return true;
@@ -335,11 +335,11 @@ namespace TTR {
             if(this.client != null) this.client.Close();
         }
         protected void Log(string message) {
-			Debug.Log("[ActionDispatcher] " + message);
+			//Debug.Log("[ActionDispatcher] " + message);
 		}
 
 		protected void Error(string message) {
-			Debug.LogError("[ActionDispatcher] " + message);
+			//Debug.LogError("[ActionDispatcher] " + message);
 		}
     }
 }
