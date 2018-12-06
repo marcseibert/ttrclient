@@ -22,9 +22,9 @@ namespace TTR {
 				}
 
 
-				var turnType = (TurnType) Enum.Parse(typeof(TurnType), message["turnType"]);
+				var turnType = ToEnum<TurnType>(message["turnType"]);//(TurnType) Enum.Parse(typeof(TurnType), message["turnType"]);
 
-				if(!message["success"].AsBool) {
+                if (!message["success"].AsBool) {
 					// RETURN ERROR MESSAGE
 					var currentPlayer = ToEnum<PlayerColor>(message["player"]);
 					var errorCode = ToEnum<ErrorCode>(message["errorCode"]);
@@ -33,8 +33,8 @@ namespace TTR {
 				}
 
 				if(turnType == TurnType.BoardState) {
-					DestinationTicket[] ownDestinationTickets = NodeToDestinationTickets(message["ownDestinationTickets"]);
-					DestinationTicket[] activeDestinationTickets = NodeToDestinationTickets(message["activeDestinationTickets"]);
+					DestinationTicket[] ownDestinationTickets = NodeToDestinationTickets(message["drawnDestinationTickets"]);
+					DestinationTicket[] activeDestinationTickets = NodeToDestinationTickets(message["toBeClaimedDestinationTickets"]);
 					Route[] ownRoutes = new Route[message["ownRoutes"].Count];
 					PassengerCarColor[] faceUpPassengerCarDeck = new PassengerCarColor[message["faceUpPassengerCarDeck"].AsArray.Count];
 					int[] drawnPassengerCars = new int[message["drawnPassengerCars"].AsArray.Count];
@@ -50,16 +50,23 @@ namespace TTR {
 					}
 
 					int topdownPassengerCarDeckCount = message["topdownPassengerCarDeckCount"].AsInt;
-					int destinationTicketCount = message["destinationTicketCount"].AsInt;
+					int destinationTicketCount = message["destinationTicketsCount"].AsInt;
 					int leftPassengerCars = message["leftPassengerCars"].AsInt;
 					bool finalTurn = message["finalTurn"].AsBool;
 					PlayerColor nextPlayer = ToEnum<PlayerColor>(message["player"]);
 
 					return new BoardStateResp(faceUpPassengerCarDeck, topdownPassengerCarDeckCount, destinationTicketCount, nextPlayer, drawnPassengerCars, ownDestinationTickets, activeDestinationTickets, ownRoutes, leftPassengerCars, finalTurn);
-				} else if(turnType == TurnType.ClaimDestinationTickets) {
+				} else if (turnType == TurnType.DrawDestinationTickets) {
+                    var player = ToEnum<PlayerColor>(message["player"]);
+                    var success = message["success"].AsBool;
+                    var destinationTickets = NodeToDestinationTickets(message["drawnCards"]);
+
+                    return new DrawDestinationTicketsResp(player, destinationTickets);
+
+                } else if(turnType == TurnType.ClaimDestinationTickets) {
 					var player = ToEnum<PlayerColor>(message["player"]);
 					var success = message["success"].AsBool;
-					var destinationTickets = NodeToDestinationTickets("drawnCards");
+					var destinationTickets = NodeToDestinationTickets(message["drawnCards"]);
 
 					return new ClaimDestinationTicketsResp(player, destinationTickets);
 
@@ -102,8 +109,8 @@ namespace TTR {
 
 					string playerName = message["name"];
 
-					DestinationTicket[] claimedTickets = NodeToDestinationTickets("claimedTickets");
-					DestinationTicket[] notClaimedTickets = NodeToDestinationTickets("notClaimedTickets");
+					DestinationTicket[] claimedTickets = NodeToDestinationTickets(message["claimedTickets"]);
+					DestinationTicket[] notClaimedTickets = NodeToDestinationTickets(message["notClaimedTickets"]);
 
 					return new PlayerScore(playerColor, playerName, totalScore, scorePassengerCars, longsetRouteLength, longestRoute, winner, claimedTickets, notClaimedTickets);
 
@@ -164,11 +171,11 @@ namespace TTR {
 		private static DestinationTicket[] NodeToDestinationTickets(JSONNode node) {
 			DestinationTicket[] destinationTickets = new DestinationTicket[node.Count];
 			int i = 0;
-			foreach(JSONNode ticket in node) {
+			foreach(JSONNode ticket in node.Children) {
 				var destinationA = (Destination) Enum.Parse(typeof(Destination), ticket["city1"]);
 				var destinationB = (Destination) Enum.Parse(typeof(Destination), ticket["city2"]);
 
-				destinationTickets[i] = new DestinationTicket(destinationA, destinationB, node["points"].AsInt);
+				destinationTickets[i++] = new DestinationTicket(destinationA, destinationB, ticket["points"].AsInt);
 			}
 
 			return destinationTickets;
