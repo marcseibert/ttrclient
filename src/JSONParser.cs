@@ -110,7 +110,7 @@ namespace TTR {
 					string playerName = message["name"];
 
 					DestinationTicket[] claimedTickets = NodeToDestinationTickets(message["claimedTickets"]);
-					DestinationTicket[] notClaimedTickets = NodeToDestinationTickets(message["notClaimedTickets"]);
+					DestinationTicket[] notClaimedTickets = NodeToDestinationTickets(message["nonClaimedTickets"]);
 
 					return new PlayerScore(playerColor, playerName, totalScore, scorePassengerCars, longsetRouteLength, longestRoute, winner, claimedTickets, notClaimedTickets);
 
@@ -183,7 +183,7 @@ namespace TTR {
 
 		private static T ToEnum <T> (string s) {
 			if(s == null) {
-				Debug.LogError("Can't tunr null to enum!");
+				Debug.LogError("Can't turn null to enum!");
 				return (T) Enum.Parse(typeof(T), Enum.GetNames(typeof(T))[0]);
 			}
 			return (T) Enum.Parse(typeof(T), s);
