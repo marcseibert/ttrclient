@@ -1,11 +1,10 @@
-﻿using System;
+using System;
 using System.IO;
 using System.Net;
 using System.Net.Sockets;
 using System.Collections;
 using System.Collections.Generic;
 using System.Threading;
-using UnityEngine;
 
 namespace TTR {
 	public class OnlineClient : Client {
@@ -49,12 +48,9 @@ namespace TTR {
 		}
 		public override bool Close() {
 			if(IsConnected) {
+                this.IsConnected = false;
 				this.inStream.Close();
-
-				this.clientThread.Join();
-				this.clientThread = null;
-
-				this.IsConnected = false;
+                this.clientThread.Join();
 
 				this.Log("Connection successfully closed.");
 				return true;
@@ -66,15 +62,18 @@ namespace TTR {
 		public override void MessageReceiver() {
 			string result;
 			try{
-				while(!this.inStream.EndOfStream && IsConnected) {
+				do  {
 					result = this.inStream.ReadLine();
-
 					base.OnNewMessageReceived(result);
-				}
-			}
+
+				} while (IsConnected);
+
+            }
 			catch(ObjectDisposedException e) {
 				this.Log("Stream was closed.");
 			}
+
+            Console.WriteLine("Stopping Message Receiver.");
 		}
 
 		public override void Send(String message)
