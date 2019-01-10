@@ -1,11 +1,10 @@
-﻿using System;
+using System;
 using System.IO;
 using System.Net;
 using System.Net.Sockets;
 using System.Threading;
 using System.Collections;
 using System.Collections.Generic;
-using UnityEngine;
 
 namespace TTR{
 	public enum ClientMode { Log, Live }
@@ -21,7 +20,7 @@ namespace TTR{
 
 		public event EventHandler<string> OnMessageReceived;
 
-		public Client() {
+        protected Client() {
 
 			this.IsConnected = false;
 		}
@@ -29,9 +28,12 @@ namespace TTR{
 		public void StartMessageReceiver() {
 				this.Log("Starting Message Receiver..");
 
-				this.clientThread = new Thread(new ThreadStart(MessageReceiver));
-				this.clientThread.IsBackground = true;
-				this.clientThread.Start();
+            this.clientThread = new Thread(new ThreadStart(MessageReceiver))
+            {
+                IsBackground = true
+            };
+
+            this.clientThread.Start();
 
 				IsConnected = true;
 		}
@@ -48,11 +50,11 @@ namespace TTR{
 		}
 
 		protected void Log(string message) {
-			Debug.Log("[GameServer] " + message);
+            Console.WriteLine("[GameServer] " + message);
 		}
 
 		protected void Error(string message) {
-			Debug.LogError("[GameServer] " + message);
+			Console.WriteLine("[GameServer] " + message);
 		}
 
 		public virtual void Send(string message) {
