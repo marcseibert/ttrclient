@@ -251,8 +251,9 @@ namespace TTR.Protocol {
 
     public DestinationTicket[] drawnDestinationTickets;
     public DestinationTicket[] toBeClaimedDestinationTickets;
-    
+
     public Route[] ownRoutes;
+    public int activePlayers;
     
     public bool finalTurn;
     
@@ -267,6 +268,7 @@ namespace TTR.Protocol {
         DestinationTicket[] activeDestinationTickets,
         Route[] ownRoutes,
         int leftPassengerCars,
+        int activePlayers,
         bool finalTurn
         )
       : base(true, player, TurnType.BoardState) {
@@ -278,6 +280,7 @@ namespace TTR.Protocol {
       this.drawnPassengerCars = drawnPassengerCars;
       this.ownRoutes = ownRoutes;
       this.leftPassengerCars = leftPassengerCars;
+      this.activePlayers = activePlayers;
       this.finalTurn = finalTurn;
     }
 
@@ -295,6 +298,7 @@ namespace TTR.Protocol {
       s.Append(";ownRoutes:"+string.Join(",", (object[]) ownRoutes));
       
       s.Append(";leftPassengerCars:" + leftPassengerCars);
+      s.Append(";activePlayers:" + activePlayers);
       s.Append(";lastTurn:"+finalTurn);
       return s.ToString();
     }
@@ -456,15 +460,11 @@ namespace TTR.Protocol {
     
     public PlayerColor claimedBy;
     
-    public Route(Destination d1, Destination d2, int cost, PassengerCarColor color) {
+    public Route(Destination d1, Destination d2, int cost, PassengerCarColor color, PlayerColor claimedBy) {
       this.d1 = d1;
       this.d2 = d2;
       this.cost = cost;
       this.color = color;
-      this.claimedBy = PlayerColor.None;
-    }
-    
-    public void setClaimedBy(PlayerColor claimedBy) {
       this.claimedBy = claimedBy;
     }
     
@@ -501,4 +501,37 @@ namespace TTR.Protocol {
       return s.ToString();
     }
   }
+
+    public class ClaimRouteReq
+    {
+        public Destination d1;
+        public Destination d2;
+        public PassengerCarColor trackColor;
+        public PassengerCarColor payColor;
+
+        public ClaimRouteReq(Destination d1, Destination d2, PassengerCarColor trackColor, PassengerCarColor payColor)
+        {
+            this.d1 = d1;
+            this.d2 = d2;
+            this.trackColor = trackColor;
+            this.payColor = payColor;
+        }
+    }
+
+    public class DrawPassengerCarReq
+    {
+        public bool OpenStack;
+        public PassengerCarColor color;
+
+        public DrawPassengerCarReq()
+        {
+            this.OpenStack = false;
+        }
+
+        public DrawPassengerCarReq(bool OpenStack, PassengerCarColor color)
+        {
+            this.OpenStack = OpenStack;
+            this.color = color;
+        }
+    }
 }
