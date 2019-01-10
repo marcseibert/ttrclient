@@ -1,16 +1,15 @@
 using System;
 using System.Text;
 using System.Collections.Generic;
-using UnityEngine;
 
 namespace TTR {
-    public class ActionDispatcher : MonoBehaviour {
+    public class ActionDispatcher {
 
         public Client client {private set; get;}
         public bool RequestsAvailable { private set; get; }
 
         public bool IsHalted { private set; get; }
-        private float haltDuration = 0;
+        private DateTime haltDuration;
         private Queue<Protocol.Message> pendingMessages;
 
         // EVENTS
@@ -23,12 +22,9 @@ namespace TTR {
         public TTR.ClientMode Mode;
 
         private bool isInitialized = false;
+        private bool isClosed = false;
 
-        void Awake() {
-            // Init(ClientMode.Log, "/Users/marcseibert/Desktop/log.txt");
-        }
-
-        public void Init(ClientMode mode, string address, int port=8080) {
+        public ActionDispatcher(ClientMode mode, string address, int port=8080) {
             if(this.isInitialized) {
                 this.Error("ActionDispatcher was initialized already.");
                 return;
@@ -61,8 +57,8 @@ namespace TTR {
             IsHalted = false;
         }
 
-        void Update() {
-            if(!IsHalted && this.pendingMessages != null) {
+        public bool Update() {
+            if(!isClosed && !IsHalted && this.pendingMessages != null) {
                 lock(this.pendingMessages){
                     if(this.pendingMessages.Count > 0) {
                         var message = this.pendingMessages.Peek();
@@ -76,16 +72,24 @@ namespace TTR {
                     }
                 }
             } else {
-                if(haltDuration > 0 && haltDuration <= Time.time) {
+                if(haltDuration != null && haltDuration <= DateTime.Now) {
                     Resume();
                 } 
             }
+
+            return !isClosed;//this.pendingMessages.Count > 0 || this.client.IsConnected;
         }
         
         public bool IsMessageAvailable() {
             return this.pendingMessages != null && this.pendingMessages.Count > 0;
         }
-        
+
+        public void Close()
+        {
+            this.isClosed = true;
+            this.client.Close();
+        }
+
         /*
             Returns a single message from the pending messages queue.
          */
@@ -247,7 +251,7 @@ namespace TTR {
             if(this.OnReceivedActionResponse[(int) turnType] != null) {
 
                 if(log) {
-                    this.Error("This Action (" + turnType +") is already awaiting a response.");
+                    this.Log("Ignoring Action. This Action (" + turnType +") is already awaiting a response.");
                 }
 
                 return true;
@@ -260,14 +264,13 @@ namespace TTR {
          */
         public void Pause() {
             this.IsHalted = true;
-            this.haltDuration = 0f;
         }
 
         public void Pause(float duration) {
             this.IsHalted = true;
             
             if(duration > 0) {
-                this.haltDuration = duration + Time.time;
+                this.haltDuration = DateTime.Now.AddSeconds(duration);
             } else {
                 this.Error("Pause duration has to be positive.");
             }
@@ -278,20 +281,17 @@ namespace TTR {
          */
         public void Resume() {
             this.IsHalted = false;
-            this.haltDuration = 0;
         }
 
         /*
             Handles the OnMessageReceived Event from the client.
          */
         private void ProcessServerMessage(object sender, string message) {
-            //Debug.Log("Received Server Message: " +message);
+            // this.Log("Received Server Message: " +message);
             var messageObject = JSONParser.Parse(message);
-            //Debug.Log("parsed object " + (pendingMessages == null));
 
             lock(this.pendingMessages) {
                 this.pendingMessages.Enqueue(messageObject);
-                //Debug.Log("enqueued this request!");
             }
         }
 
@@ -300,20 +300,22 @@ namespace TTR {
          */
         private bool DispatchMessage(Protocol.Message message) {
             if(message.Type == Protocol.MessageType.Info) {
-                //Debug.Log("i: " + message);
+                this.Log("i: " + message);
                 Protocol.TurnResp response = (Protocol.TurnResp) message;
+
                 if(OnReceivedActionResponse[(int) response.turnType] != null) {
                     OnReceivedActionResponse[(int) response.turnType](response);
                     OnReceivedActionResponse[(int) response.turnType] = null; // COULD BE AN ISSUE IF AWAITING MULTIPLE RESPONSES OF SAME TYPE
+
                 } else if(OnReceivedResponse != null) {
-                    EventHandler<Protocol.TurnResp> handler = OnReceivedResponse;
-                    handler(this, response);
-                } else {
+                    OnReceivedResponse.Invoke(this, response);
+                }
+                else {
                     return false;
                 }
                 
             } else if(message.Type == Protocol.MessageType.Request) {
-                //Debug.Log("r: " + message);
+                this.Log("r: " + message);
                 Protocol.TurnReq request = (Protocol.TurnReq) message;
 
                 if(OnReceivedTurnRequest != null) {
@@ -325,7 +327,7 @@ namespace TTR {
                 }
             }
             else if(message.Type == Protocol.MessageType.TextMessage) {
-                //Debug.Log("[Server Message] " + ((Protocol.TextResp)message).text);
+                this.Log("[Server Message] " + ((Protocol.TextResp)message).text);
             }
 
             return true;
@@ -335,11 +337,13 @@ namespace TTR {
             if(this.client != null) this.client.Close();
         }
         protected void Log(string message) {
-			//Debug.Log("[ActionDispatcher] " + message);
+			Console.WriteLine("[ActionDispatcher] " + message);
 		}
 
 		protected void Error(string message) {
-			//Debug.LogError("[ActionDispatcher] " + message);
+			Console.WriteLine("[ERROR] [ActionDispatcher] " + message);
 		}
     }
+
+
 }
