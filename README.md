@@ -58,7 +58,7 @@ Das Argument **duration** ist optional. Wenn man die Methode ohne Parameter bzw.
 ```
 
 Hier eine beispielhafte OnTurnRequest Methode
-```
+```csharp
 public void OnTurnRequest(object sender, TurnReq request)
 {
 	// Der Server wiederholt nach jeder Request vom Client die initiale Request. Das wird hier abgefangen.
