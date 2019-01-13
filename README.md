@@ -77,7 +77,57 @@ void Update() {
   }
 }
 ```
+# Wie benutze ich den Client in einer Command Line Application
+```csharp
+        public static void Main(string[] args)
+        {
+            string address = "127.0.0.1";
+            int port = 8080;
 
+            if(args.Length > 0)
+            {
+                address = args[0];
+                if(args.Length > 1)
+                {
+                    int.TryParse(args[1], out port);
+                }
+            }
+
+            ActionDispatcher dispatcher = new ActionDispatcher(ClientMode.Live, address, port);
+            dispatcher.OnReceivedResponse += IgnoreInfos; // Ignore Infos ist eine Methode, die Info Messages verwirft
+		
+	   // Es bietet sich vielleicht an ein Interface oder Aehnliches fuer euren Agent zu verwenden
+            AgentController agent = new AgentController(AgentType.RouteFocusedAgent, dispatcher);
+
+            while (dispatcher.Update()) { } // MAIN LOOP
+
+            Environment.Exit(0); // Beendet eine Konsolenanwendung
+        }
+```
+
+Hier eine Beispiel OnTurnRequest Methode
+```
+public void OnTurnRequest(object sender, TurnReq request)
+{
+	// Der Server wiederholt nach jeder Request vom Client die initiale Request. Das wird hier abgefangen.
+	if (turnActive) { return; }
+        turnActive = true;
+
+        if(request.turnType == TurnType.Join)
+        {
+		// Hier werden Lambda Expressions verwendet
+       		dispatcher.JoinGame(name, ClientType.Player, (r) =>
+               	{
+                    dispatcher.GetAllRoutes((response) =>
+                    {
+
+                        Console.WriteLine("Hurra du hast es geschafft! Fuer weitere Informationen sieh https://docs.microsoft.com/en-us/dotnet/csharp/programming-guide/");
+                        turnActive = false;
+                    });
+                });
+        }
+}
+```
 # Demo Handler
 ```csharp
 using System.Collections;
