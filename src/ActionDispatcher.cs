@@ -193,7 +193,7 @@ namespace TTR {
             return true;
         }
 
-        public bool ClaimRoute(Protocol.Destination destA, Protocol.Destination destB, Protocol.PassengerCarColor routeColor, Protocol.PassengerCarColor passengerCarColor, Action<Protocol.TurnResp> callback=null) {
+        public bool ClaimRoute(Protocol.Destination destA, Protocol.Destination destB, Protocol.PassengerCarColor targetRouteColor, Action<Protocol.TurnResp> callback=null) {
             if(IsActionBlocked(Protocol.TurnType.ClaimRoute, true)){
                 return false;
             }
@@ -204,9 +204,7 @@ namespace TTR {
                     .Append(" ")
                     .Append(destB.ToString())
                     .Append(" ")
-                    .Append(routeColor)
-                    .Append(" ")
-                    .Append(passengerCarColor);
+                    .Append(targetRouteColor);
 
             this.OnReceivedActionResponse[(int) Protocol.TurnType.ClaimRoute] += callback;
 

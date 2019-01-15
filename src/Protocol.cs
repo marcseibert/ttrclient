@@ -501,37 +501,4 @@ namespace TTR.Protocol {
       return s.ToString();
     }
   }
-
-    public class ClaimRouteReq
-    {
-        public Destination d1;
-        public Destination d2;
-        public PassengerCarColor trackColor;
-        public PassengerCarColor payColor;
-
-        public ClaimRouteReq(Destination d1, Destination d2, PassengerCarColor trackColor, PassengerCarColor payColor)
-        {
-            this.d1 = d1;
-            this.d2 = d2;
-            this.trackColor = trackColor;
-            this.payColor = payColor;
-        }
-    }
-
-    public class DrawPassengerCarReq
-    {
-        public bool OpenStack;
-        public PassengerCarColor color;
-
-        public DrawPassengerCarReq()
-        {
-            this.OpenStack = false;
-        }
-
-        public DrawPassengerCarReq(bool OpenStack, PassengerCarColor color)
-        {
-            this.OpenStack = OpenStack;
-            this.color = color;
-        }
-    }
 }
