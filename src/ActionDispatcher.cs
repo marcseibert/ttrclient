@@ -129,6 +129,25 @@ namespace TTR {
             return true;
         }
 
+        public bool JoinGame(string name, Protocol.ClientType clientType, Protocl.PlayerColor colorWish, Action<Protocol.TurnResp> callback=null) { 
+            if(IsActionBlocked(Protocol.TurnType.Join, true)){
+                return false;
+            }
+
+            StringBuilder builder = new StringBuilder();
+            builder.Append("Join ")
+                    .Append(name)
+                    .Append(" ")
+                    .Append(clientType.ToString())
+                    .Append(" ")
+                    .Append(colorWish.ToString());
+
+            this.OnReceivedActionResponse[(int) Protocol.TurnType.Join] += callback;
+            this.client.Send(builder.ToString());
+
+            return true;
+        }
+
         public bool DrawHiddenPassengerCar(Action<Protocol.TurnResp> callback=null) { 
             if(IsActionBlocked(Protocol.TurnType.DrawPassengerCars, true)){
                 return false;
