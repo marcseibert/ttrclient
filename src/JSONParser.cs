@@ -92,8 +92,9 @@ namespace TTR
                     var player = ToEnum<PlayerColor>(message["player"]);
                     var success = message["success"].AsBool;
                     var destinationTickets = NodeToDestinationTickets(message["drawnCards"]);
-
-                    return new ClaimDestinationTicketsResp(player, destinationTickets);
+                    var drawnCardsCount = message["drawnCardsCount"].AsInt;
+                    
+                    return new ClaimDestinationTicketsResp(player, destinationTickets, drawnCardsCount);
 
                 }
                 else if (turnType == TurnType.ClaimRoute)
