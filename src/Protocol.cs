@@ -369,9 +369,11 @@ namespace TTR.Protocol {
   
   public class ClaimDestinationTicketsResp : TurnResp {
     public DestinationTicket[] drawnCards;
-    public ClaimDestinationTicketsResp (PlayerColor nextPlayer, DestinationTicket[] drawnCards)
+    public int drawnCardsCount;
+    public ClaimDestinationTicketsResp (PlayerColor nextPlayer, DestinationTicket[] drawnCards, int drawnCardsCount)
       : base(true, nextPlayer, TurnType.ClaimDestinationTickets){
       this.drawnCards = drawnCards;
+      this.drawnCardsCount = drawnCardsCount;
     }
     
     public override string ToString() {
