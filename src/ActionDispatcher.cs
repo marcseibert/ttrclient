@@ -129,7 +129,7 @@ namespace TTR {
             return true;
         }
 
-        public bool JoinGame(string name, Protocol.ClientType clientType, Protocl.PlayerColor colorWish, Action<Protocol.TurnResp> callback=null) { 
+        public bool JoinGame(string name, Protocol.ClientType clientType, Protocol.PlayerColor colorWish, Action<Protocol.TurnResp> callback=null) { 
             if(IsActionBlocked(Protocol.TurnType.Join, true)){
                 return false;
             }
