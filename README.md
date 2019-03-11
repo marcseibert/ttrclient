@@ -1,7 +1,7 @@
 ttrclient ist eine einfache Bibliothek, die die Kommunikation mit dem Server vereinfacht. Funktioniert mit Unity und auch in unabhaengigen .NET Core Applications.
 
 # Quick Start
-Mit dieser Bibliothek ist es sehr einfach sowohl das Log als auch direkt vom Server Nachrichten zu verarbeiten. Dabei koennt ihr waehlen, ob ihr klassisch ueber die Update Methode die Nachrichten aus einer Queue abarabeitet oder lieber ueber ein asynchrones Event System arbeitet.
+Mit dieser Bibliothek ist es sehr einfach sowohl das Log als auch direkt vom Server Nachrichten zu verarbeiten. Dabei koennt ihr waehlen, ob ihr klassisch ueber die Update Methode die Nachrichten aus einer Queue abarbeitet oder lieber ueber ein asynchrones Event System arbeitet.
 
 
 # Installation
