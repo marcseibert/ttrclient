@@ -1,15 +1,19 @@
-# Diese Version funktioniert auch ohne Unity. Hier in der README gibt es dazu auch Beispiele :)
+ttrclient ist eine einfache Bibliothek, die die Kommunikation mit dem Server vereinfacht. Funktioniert mit Unity und auch in unabhaengigen .NET Core Applications.
 
-# ttrclient
-Einfache Bibliothek, die zur Kommunikation mit dem TTR-Server genutzt werden kann. Client-Server Kommunikation und JSON Parsen 
-wird automatisch gehandhabt.
+# Quick Start
+Mit dieser Bibliothek ist es sehr einfach sowohl das Log als auch direkt vom Server Nachrichten zu verarbeiten. Dabei koennt ihr waehlen, ob ihr klassisch ueber die Update Methode die Nachrichten aus einer Queue abarabeitet oder lieber ueber ein asynchrones Event System arbeitet.
+
 
 # Installation
 
+## Unity
 1. Auf **Assets/Import Packages/Custom** Package klicken.
 2. Das File **ttrclient.unitypackage** auswählen.
 3. Ein GameObject erstellen und den **ActionDispatcher.cs** als Komponente hinzufügen.
 4. Die Methode void Init(TTR.ClientMode mode, string address, int port) muss aufgerufen werden, bevor der ActionDispatcher benutzt wird.
+
+## .NET Core Application
+
 
 # Module
 Der Client kann in zwei Varianten initialisiert werden. Die erste Variante ist der sogenannte **Offline Client**. Der Offline Client muss mit **ClientModus.Log** initialisiert werden. Als zweite Option gibt es den **Online Client**. Beide Clients verhalten sich gleich. Der **Offline Client** simuliert den **Online Cient** indem er nach jeder Zeile den Message Receiver Thread für eine gewisse Zeit blockiert.
@@ -29,7 +33,7 @@ Erlaubt es den Action Dispatcher für eine **duration** (in Sekunden) zu pausier
 Das Argument **duration** ist optional. Wenn man die Methode ohne Parameter bzw. einer **duration** <= 0 aufruft, dann wird der ActionDispatcher dauerhaft angehlaten. Mithilfe der **Resume()** Methode, kann der ActionDispatcher wieder aktiviert werden.
 
 
-# Wie benutze ich den Client in einer Command Line Application
+# Action Dispatcher Example
 ```csharp
         public static void Main(string[] args)
         {
@@ -73,7 +77,8 @@ public void OnTurnRequest(object sender, TurnReq request)
                     dispatcher.GetAllRoutes((response) =>
                     {
 
-                        Console.WriteLine("Hurra du hast es geschafft! Fuer weitere Informationen sieh https://docs.microsoft.com/en-us/dotnet/csharp/programming-guide/");
+                        Console.WriteLine("Hello World");
+												
                         turnActive = false;
                     });
                 });
@@ -109,13 +114,14 @@ private void OnReceivedTurnRequest(object sender, TTR.Protocol.TurnReq request) 
 
 # Offline Example
 ## Befehle empfange und bearbeiten.
+In diesem Beispiel wird die synchrone Variante verwendet. Das Beispiel funktioniert auch mit einem Online Client, dafuer muss lediglich der ClientMode auf Live gestellt werden.
 ```csharp
 TTR.ActionDispatcher dispatcher;
   
 void Start() {
-  dispatcher = Transform.FindObjectOfType<TTR.ActionDispatcher>();
-  dispatcher.Init(TTR.ClientMode.Log, "/Users/marcseibert/Desktop/log.txt");
-  dispatcher.Pause();
+  dispatcher = gameOjbect.AddComponent<TTR.ActionDispatcher>();
+  dispatcher.Init(TTR.ClientMode.Log, "/your/path/to/log.txt");
+  dispatcher.Pause();		// Hier nicht notwendig, da der dispatcher "Pausiert" ist, wenn kein Receive-Event festgelegt ist.
 }
 
 void Update() {
@@ -123,7 +129,14 @@ void Update() {
     var message = this.dispatcher.GetNextMessage();
 
     if(message.Type == TTR.Protocol.MessageType.Info) {
-       // DO WHATEVER
+       // Message ist hier vom Typ TurnReq
+			 switch(((TurnReq) message).turnType) {
+				case TurnType.Join:
+				 	break;
+					 .
+					 .
+					 .
+			 }
     }
   }
 }
@@ -202,26 +215,6 @@ namespace TTR {
 				action();
 			}
 		}
-
-		/*
-		void Start() {
-			dispatcher = Transform.FindObjectOfType<TTR.ActionDispatcher>();
-			dispatcher.Init(TTR.ClientMode.Log, "/Users/marcseibert/Desktop/log.txt");
-			dispatcher.Pause();
-		}
-
-		void Update() {
-			if(this.dispatcher.IsMessageAvailable()) {
-				var message = this.dispatcher.GetNextMessage();
-
-				if(message.Type == TTR.Protocol.MessageType.Info) {
-					// DO WHATEVER
-
-				}
-			}
-		}*/
-
-
 	}
 }
 ```

@@ -22,7 +22,7 @@ namespace TTR {
 
 		public override bool Connect() {
 
-			if(IsConnected) {
+			if(Connected) {
 				this.Error("Client is already connected.");
 				return false;
 			}
@@ -35,7 +35,7 @@ namespace TTR {
 				this.outStream = new StreamWriter(this.client.GetStream());
 
 				this.StartMessageReceiver();
-				this.IsConnected = true;
+				this.Connected = true;
 
 				this.Log("Ready.");
 				return true;
@@ -47,8 +47,8 @@ namespace TTR {
 			return false;
 		}
 		public override bool Close() {
-			if(IsConnected) {
-                this.IsConnected = false;
+			if(Connected) {
+                this.Connected = false;
 				this.inStream.Close();
                 this.clientThread.Join();
 
@@ -66,10 +66,10 @@ namespace TTR {
 					result = this.inStream.ReadLine();
 					base.OnNewMessageReceived(result);
 
-				} while (IsConnected);
+				} while (Connected);
 
             }
-			catch(ObjectDisposedException e) {
+			catch { // ObjectDisposedException
 				this.Log("Stream was closed.");
 			}
 

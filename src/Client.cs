@@ -5,13 +5,15 @@ using System.Net.Sockets;
 using System.Threading;
 using System.Collections;
 using System.Collections.Generic;
+using TTR.Protocol;
 
 namespace TTR{
 	public enum ClientMode { Log, Live }
 	public abstract class Client {
-
+		
+		public const LogLevel logLevel = LogLevel.Info;
 		public ClientMode Mode { protected set; get; }
-		public bool IsConnected { protected set; get; }
+		public bool Connected { protected set; get; }
 
 		protected Thread clientThread;
 
@@ -22,11 +24,11 @@ namespace TTR{
 
         protected Client() {
 
-			this.IsConnected = false;
+			this.Connected = false;
 		}
 
 		public void StartMessageReceiver() {
-				this.Log("Starting Message Receiver..");
+			this.Log("Starting Message Receiver..");
 
             this.clientThread = new Thread(new ThreadStart(MessageReceiver))
             {
@@ -35,7 +37,7 @@ namespace TTR{
 
             this.clientThread.Start();
 
-				IsConnected = true;
+			Connected = true;
 		}
 
 		public abstract void MessageReceiver();
@@ -50,11 +52,15 @@ namespace TTR{
 		}
 
 		protected void Log(string message) {
-            Console.WriteLine("[GameServer] " + message);
+			if(Client.logLevel > 1) {
+           		Console.WriteLine("[GameServer] " + message);
+			}
 		}
 
 		protected void Error(string message) {
-			Console.WriteLine("[GameServer] " + message);
+			if(Client.logLevel > 0) {
+				Console.WriteLine("[GameServer] " + message);
+			}
 		}
 
 		public virtual void Send(string message) {

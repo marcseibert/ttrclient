@@ -1,4 +1,4 @@
-using System.Text;
+/*/using System.Text;
 
 namespace TTR.Protocol {
   public enum MessageType {
@@ -210,7 +210,7 @@ namespace TTR.Protocol {
       s.Append(";color:"+color);
       return s.ToString();
     }
-  }*/
+  }
   
   public class ListAllRoutesResp : TurnResp {
     public Route[] routes;
@@ -504,3 +504,4 @@ namespace TTR.Protocol {
     }
   }
 }
+*/

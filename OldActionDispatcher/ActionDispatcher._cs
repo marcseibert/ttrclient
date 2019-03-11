@@ -1,50 +1,41 @@
-using System;
+/*8using System;
 using System.Text;
 using System.Collections.Generic;
-using TTR.Protocol;
 
 namespace TTR {
-
-    public enum LogLevel {
-        None,
-        Error,
-        Info,
-    }
-
     public class ActionDispatcher {
-        
-        public const LogLevel logLevel = LogLevel.INFO;
 
         public Client client {private set; get;}
-        private Queue<Message> pendingMessages;
-
-        // PROPERTIES
         public bool RequestsAvailable { private set; get; }
-        public bool Paused { private set; get; }
+
+        public bool IsHalted { private set; get; }
         private DateTime haltDuration;
+        private Queue<Protocol.Message> pendingMessages;
 
         // EVENTS
-        public event EventHandler<TurnReq> OnReceivedTurnRequest; 
-        public event EventHandler<TurnResp> OnReceivedResponse;
+        public event EventHandler<Protocol.TurnReq> OnReceivedTurnRequest; 
+        public event EventHandler<Protocol.TurnResp> OnReceivedResponse;
         
-        private Action<TurnResp>[] OnReceivedActionResponse;
+        private Action<Protocol.TurnResp>[] OnReceivedActionResponse;
         private Action OnClientReady;
         
+        public TTR.ClientMode Mode;
 
-        private bool initialized = false;
-        private bool closed = false;
+        private bool isInitialized = false;
+        private bool isClosed = false;
 
         public ActionDispatcher(ClientMode mode, string address, int port=8080) {
-            if(this.initialized) {
+            if(this.isInitialized) {
                 this.Error("ActionDispatcher was initialized already.");
                 return;
             }
 
-            pendingMessages = new Queue<Message>();
-            OnReceivedActionResponse = new Action<TurnResp>[Enum.GetNames(typeof(TurnType)).Length];
+            this.Mode = mode;
+            pendingMessages = new Queue<Protocol.Message>();
+            OnReceivedActionResponse = new Action<Protocol.TurnResp>[Enum.GetNames(typeof(Protocol.TurnType)).Length];
 
             // SETUP CLIENT
-            if(mode == ClientMode.Log) {
+            if(Mode == ClientMode.Log) {
                 client = new OfflineClient(address);
             }
             else {
@@ -63,11 +54,11 @@ namespace TTR {
                 this.Error("Could not connect to the server.");
             }
 
-            this.Paused = false;
+            IsHalted = false;
         }
 
         public bool Update() {
-            if(!closed && !Paused && this.pendingMessages != null) {
+            if(!isClosed && !IsHalted && this.pendingMessages != null) {
                 lock(this.pendingMessages){
                     if(this.pendingMessages.Count > 0) {
                         var message = this.pendingMessages.Peek();
@@ -86,7 +77,7 @@ namespace TTR {
                 } 
             }
 
-            return !closed;
+            return !isClosed;//this.pendingMessages.Count > 0 || this.client.IsConnected;
         }
         
         public bool IsMessageAvailable() {
@@ -95,14 +86,14 @@ namespace TTR {
 
         public void Close()
         {
-            this.closed = true;
+            this.isClosed = true;
             this.client.Close();
         }
 
         /*
             Returns a single message from the pending messages queue.
          */
-        public Message GetNextMessage() {
+        public Protocol.Message GetNextMessage() {
             if(this.pendingMessages == null || this.pendingMessages.Count == 0) {
                 return null;
             }
@@ -111,7 +102,7 @@ namespace TTR {
         }
 
         /*
-            Can be used to ensure that the client is already up and running before calling delayedAction.  
+            Can be used to ensure, that the the client is already up and running before calling delayedAcition.  
         */
         public void AwaitConnection(Action delayedAction) {
             if(this.client != null && this.client.IsConnected) {
@@ -121,12 +112,25 @@ namespace TTR {
             }
         }
 
-        public bool JoinGame(string name, ClientType clientType, Action<TurnResp> callback=null) { 
-            return JoinGame(name, clientType, PlayerColor.PlayerNone, callback);
+        public bool JoinGame(string name, Protocol.ClientType clientType, Action<Protocol.TurnResp> callback=null) { 
+            if(IsActionBlocked(Protocol.TurnType.Join, true)){
+                return false;
+            }
+
+            StringBuilder builder = new StringBuilder();
+            builder.Append("Join ")
+                    .Append(name)
+                    .Append(" ")
+                    .Append(clientType.ToString());
+
+            this.OnReceivedActionResponse[(int) Protocol.TurnType.Join] += callback;
+            this.client.Send(builder.ToString());
+
+            return true;
         }
 
-        public bool JoinGame(string name, ClientType clientType, PlayerColor colorWish, Action<TurnResp> callback=null) { 
-            if(IsActionBlocked(TurnType.Join)){
+        public bool JoinGame(string name, Protocol.ClientType clientType, Protocol.PlayerColor colorWish, Action<Protocol.TurnResp> callback=null) { 
+            if(IsActionBlocked(Protocol.TurnType.Join, true)){
                 return false;
             }
 
@@ -135,62 +139,61 @@ namespace TTR {
                     .Append(name)
                     .Append(" ")
                     .Append(clientType.ToString())
-                    ;
-                    if(colorWish != PlayerColor.PlayerNone) {
-                        builder.Append(" ")
-                            .Append(colorWish.ToString());
-                    }
+                    .Append(" ")
+                    .Append(colorWish.ToString());
 
-            this.OnReceivedActionResponse[(int) TurnType.Join] += callback;
+            this.OnReceivedActionResponse[(int) Protocol.TurnType.Join] += callback;
             this.client.Send(builder.ToString());
 
             return true;
         }
 
-        public bool DrawHiddenPassengerCar(Action<TurnResp> callback=null) { 
-            return DrawPassengerCar(true, PassengerCarColor.Rainbow, callback);
-        }
-        
-        public bool DrawOpenPassengerCar(PassengerCarColor color, Action<TurnResp> callback=null) {
-            return DrawPassengerCar(false, color, callback);
-        }
-
-        private bool DrawPassengerCar(bool hiddenDeck, PassengerCarColor color, Action<TurnResp> callback=null) {
-            if(IsActionBlocked(TurnType.DrawPassengerCars)){
+        public bool DrawHiddenPassengerCar(Action<Protocol.TurnResp> callback=null) { 
+            if(IsActionBlocked(Protocol.TurnType.DrawPassengerCars, true)){
                 return false;
             }
 
             StringBuilder builder = new StringBuilder();
-            builder.Append("DrawPassengerCars ")
-                    .Append(hiddenDeck);
+            builder.Append("DrawPassengerCars true");
 
-            if(!hiddenDeck) {
-                builder.Append(" ")
-                       .Append(color.ToString());
+            this.OnReceivedActionResponse[(int) Protocol.TurnType.DrawPassengerCars] += callback;
+            this.client.Send(builder.ToString());
+
+            return true;
+        }
+        
+        public bool DrawOpenPassengerCar(Protocol.PassengerCarColor color, Action<Protocol.TurnResp> callback=null) {
+            if(IsActionBlocked(Protocol.TurnType.DrawPassengerCars, true)){
+                return false;
             }
 
-            this.OnReceivedActionResponse[(int) TurnType.DrawPassengerCars] += callback;
+            StringBuilder builder = new StringBuilder();
+            builder.Append("DrawPassengerCars false ")
+                    .Append(color.ToString());
+
+            this.OnReceivedActionResponse[(int) Protocol.TurnType.DrawPassengerCars] += callback;
             this.client.Send(builder.ToString());
+
             return true;
         }
 
-        public bool DrawDestinationTickets(Action<TurnResp> callback=null) { 
-            if(IsActionBlocked(TurnType.DrawDestinationTickets)){
+        public bool DrawDestinationTickets(Action<Protocol.TurnResp> callback=null) { 
+            if(IsActionBlocked(Protocol.TurnType.DrawDestinationTickets, true)){
                 return false;
             }
 
             StringBuilder builder = new StringBuilder();
             builder.Append("DrawDestinationTickets");
 
-            this.OnReceivedActionResponse[(int) TurnType.DrawDestinationTickets] += callback;
+            this.OnReceivedActionResponse[(int) Protocol.TurnType.DrawDestinationTickets] += callback;
             this.client.Send(builder.ToString());
 
             return true;
         }
 
 
-        public bool ClaimDestinationTickets(bool cardA, bool cardB, bool cardC, Action<TurnResp> callback=null) { 
-            if(IsActionBlocked(TurnType.ClaimDestinationTickets)){
+        public bool ClaimDestinationTickets(bool cardA, bool cardB, bool cardC, Action<Protocol.TurnResp> callback=null) { 
+            if(IsActionBlocked(Protocol.TurnType.ClaimDestinationTickets, true)){
                 return false;
             }
 
@@ -202,15 +205,15 @@ namespace TTR {
                     .Append(" ")
                     .Append(cardC.ToString());
 
-            this.OnReceivedActionResponse[(int) TurnType.ClaimDestinationTickets] += callback;
+            this.OnReceivedActionResponse[(int) Protocol.TurnType.ClaimDestinationTickets] += callback;
 
             this.client.Send(builder.ToString());
 
             return true;
         }
 
-        public bool ClaimRoute(Destination destA, Destination destB, PassengerCarColor targetRouteColor, Action<TurnResp> callback=null) {
-            if(IsActionBlocked(TurnType.ClaimRoute)){
+        public bool ClaimRoute(Protocol.Destination destA, Protocol.Destination destB, Protocol.PassengerCarColor targetRouteColor, Action<Protocol.TurnResp> callback=null) {
+            if(IsActionBlocked(Protocol.TurnType.ClaimRoute, true)){
                 return false;
             }
 
@@ -222,48 +225,51 @@ namespace TTR {
                     .Append(" ")
                     .Append(targetRouteColor);
 
-            this.OnReceivedActionResponse[(int) TurnType.ClaimRoute] += callback;
+            this.OnReceivedActionResponse[(int) Protocol.TurnType.ClaimRoute] += callback;
 
             this.client.Send(builder.ToString());
 
             return true;
          }
 
-        public bool GetBoardState(Action<TurnResp> callback=null) { 
-            if(IsActionBlocked(TurnType.BoardState)){
+        public bool GetBoardState(Action<Protocol.TurnResp> callback=null) { 
+            if(IsActionBlocked(Protocol.TurnType.BoardState, true)){
                 return false;
             }
 
             StringBuilder builder = new StringBuilder();
             builder.Append("BoardState");
 
-            this.OnReceivedActionResponse[(int) TurnType.BoardState] += callback;
+            this.OnReceivedActionResponse[(int) Protocol.TurnType.BoardState] += callback;
 
             this.client.Send(builder.ToString());
             
             return true;
         }
 
-        public bool GetAllRoutes(Action<TurnResp> callback=null) { 
-            if(IsActionBlocked(TurnType.ListAllRoutes)){
+        public bool GetAllRoutes(Action<Protocol.TurnResp> callback=null) { 
+            if(IsActionBlocked(Protocol.TurnType.ListAllRoutes, true)){
                 return false;
             }
 
             StringBuilder builder = new StringBuilder();
             builder.Append("ListAllRoutes");
 
-            this.OnReceivedActionResponse[(int) TurnType.ListAllRoutes] += callback;
+            this.OnReceivedActionResponse[(int) Protocol.TurnType.ListAllRoutes] += callback;
             this.client.Send(builder.ToString());
 
             return true;
         }
 
         /*
-            Returns false if an action is already awaiting a response.
+            There can always be just one active request-response cycle at a time.
          */
-        public bool IsActionBlocked(TurnType turnType) {
+        public bool IsActionBlocked(Protocol.TurnType turnType, bool log=false) {
             if(this.OnReceivedActionResponse[(int) turnType] != null) {
-                this.Error("Ignoring Action. This Action (" + turnType +") is already awaiting a response.");
+
+                if(log) {
+                    this.Log("Ignoring Action. This Action (" + turnType +") is already awaiting a response.");
+                }
 
                 return true;
             }
@@ -271,17 +277,14 @@ namespace TTR {
         }
 
         /* 
-            Stops the ActionDispatcher from automatically dispatching new events.
+            Stops the ActionDispatcher from automatically dispatching new event.
          */
         public void Pause() {
-            this.Paused = true;
+            this.IsHalted = true;
         }
 
-        /*
-            Pauses the ActionDispatcher for a given duration in seconds.
-         */
         public void Pause(float duration) {
-            this.Paused = true;
+            this.IsHalted = true;
             
             if(duration > 0) {
                 this.haltDuration = DateTime.Now.AddSeconds(duration);
@@ -294,14 +297,15 @@ namespace TTR {
             Resumes the ActionDispatcher.
          */
         public void Resume() {
-            this.Paused = false;
+            this.IsHalted = false;
         }
 
         /*
             Handles the OnMessageReceived Event from the client.
          */
         private void ProcessServerMessage(object sender, string message) {
-            Message messageObject = Message.Parser.ParseJson(message);
+            // this.Log("Received Server Message: " +message);
+            var messageObject = JSONParser.Parse(message);
 
             lock(this.pendingMessages) {
                 this.pendingMessages.Enqueue(messageObject);
@@ -309,21 +313,17 @@ namespace TTR {
         }
 
         /*
-            Triggers event based on message type.
-            Returns false if there is no suitable event.
+            Decides upon the message type which event to trigger.
          */
-        private bool DispatchMessage(Message message) {
-            if(message.Type == MessageType.Info) {
+        private bool DispatchMessage(Protocol.Message message) {
+            if(message.Type == Protocol.MessageType.Info) {
                 this.Log("i: " + message);
+                Protocol.TurnResp response = (Protocol.TurnResp) message;
 
-                TurnResp response = message.TurnResp;
+                if(OnReceivedActionResponse[(int) response.turnType] != null) {
+                    OnReceivedActionResponse[(int) response.turnType](response);
+                    OnReceivedActionResponse[(int) response.turnType] = null; // COULD BE AN ISSUE IF AWAITING MULTIPLE RESPONSES OF SAME TYPE
 
-                // GETS CALLED IF A CALLBACK METHOD IS AWAITING A RESPONSE.
-                if(OnReceivedActionResponse[(int) response.TurnType] != null) {
-                    OnReceivedActionResponse[(int) response.TurnType](response);
-                    OnReceivedActionResponse[(int) response.TurnType] = null; // WRONG IF EVENT HAS MULTIPLE SUBSCRIBERS!
-
-                // IF NO SPECIFIC CALLBACK WAS DEFINIED CHECK FOR A GLOBAL EVENT SUBSCRIBER.
                 } else if(OnReceivedResponse != null) {
                     OnReceivedResponse.Invoke(this, response);
                 }
@@ -331,20 +331,20 @@ namespace TTR {
                     return false;
                 }
                 
-            } else if(message.Type == MessageType.Request) {
+            } else if(message.Type == Protocol.MessageType.Request) {
                 this.Log("r: " + message);
-                TurnReq request = message.TurnReq;
+                Protocol.TurnReq request = (Protocol.TurnReq) message;
 
                 if(OnReceivedTurnRequest != null) {
                     // TURN REQUEST
-                    EventHandler<TurnReq> handler = OnReceivedTurnRequest;
+                    EventHandler<Protocol.TurnReq> handler = OnReceivedTurnRequest;
                     handler(this, request);
                 } else {
                     return false;
                 }
             }
-            else if(message.Type == MessageType.TextMessage) {
-                this.Log("[Server Message] " + message.TextResp.Text);
+            else if(message.Type == Protocol.MessageType.TextMessage) {
+                this.Log("[Server Message] " + ((Protocol.TextResp)message).text);
             }
 
             return true;
@@ -353,19 +353,15 @@ namespace TTR {
         void OnApplicationQuit() {
             if(this.client != null) this.client.Close();
         }
-
         protected void Log(string message) {
-            if((int) ActionDispatcher.logLevel > 1) {
-			    Console.WriteLine("[ActionDispatcher] " + message);
-            }
+			Console.WriteLine("[ActionDispatcher] " + message);
 		}
 
 		protected void Error(string message) {
-	        if((int) ActionDispatcher.logLevel > 0) {
-                Console.WriteLine("[ERROR] [ActionDispatcher] " + message);
-            }
+			Console.WriteLine("[ERROR] [ActionDispatcher] " + message);
 		}
     }
 
 
 }
+*/

@@ -3,7 +3,6 @@ using System.IO;
 using System.Threading;
 using System.Collections;
 using System.Collections.Generic;
-using UnityEngine;
 
 namespace TTR {
 	public class OfflineClient : Client {
@@ -19,7 +18,7 @@ namespace TTR {
 		public override bool Connect() {
 			this.Mode = ClientMode.Log;
 
-			if(IsConnected) {
+			if(Connected) {
 				this.Error("Client is already connected.");
 			}
 			try {
@@ -38,13 +37,13 @@ namespace TTR {
 		}
 
 		public override bool Close() {
-			if(IsConnected) {
+			if(Connected) {
 				this.inStream.Close();
 
 				this.clientThread.Join();
 				this.clientThread = null;
 
-				this.IsConnected = false;
+				this.Connected = false;
 				this.Log("Connection successfully closed.");
 
 				return true;
@@ -56,17 +55,15 @@ namespace TTR {
 		public override void MessageReceiver() {
 			string result;
 			try{
-				while(!this.inStream.EndOfStream && IsConnected) {
+				while(!this.inStream.EndOfStream && this.Connected) {
 					result = this.inStream.ReadLine();
 
 					base.OnNewMessageReceived(result);
 					if(Mode == ClientMode.Log) Thread.Sleep((int)(1000* readDelay));
 				}
 			}
-			catch(ObjectDisposedException e) {
+			catch { // ObjectDisposedException
 				this.Log("Stream was closed.");
-			} catch(Exception e){
-				this.Error(e.ToString());
 			}
 		}
 
